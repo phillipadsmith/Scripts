@@ -46,6 +46,9 @@ if ( $dsn and $db_user and $db_pass ) {
     $dbh->disconnect;
 }
 
+#---------------------------------------------------------------------------
+#  Main subroutine that does the work
+#---------------------------------------------------------------------------
 sub main {
     my ( $dbh ) = @_;
     my @nodes = _get_nodes_from_db( $dbh );
@@ -55,6 +58,10 @@ sub main {
     return scalar @nodes;
 }    # ----------  end of subroutine main  ----------
 
+
+#---------------------------------------------------------------------------
+#  Helper subroutines
+#---------------------------------------------------------------------------
 sub _build_node_object {
     my ( $dbh, $nid, $title, $body, $teas, $format, $created ) = @_;
     my @tags           = _get_tags_by_nid( $dbh, $nid );
@@ -72,7 +79,7 @@ sub _build_node_object {
         tags     => $tags_as_string,
     );
     return %data;
-}    # ----------  end of subroutine _build_object  ----------
+}    # ----------  end of subroutine _build_node_object  ----------
 
 sub _build_comment_object {
     my ($dbh,    $cid,  $subject, $comment, $created,
@@ -113,7 +120,7 @@ END
     }
 
     return @nodes;
-}    # ----------  end of subroutine drupal_get_nodes_from_db  ----------
+}    # ----------  end of subroutine _get_nodes_from_db  ----------
 
 sub _get_comments_by_nid {
     my ( $dbh, $nid ) = @_;
@@ -138,7 +145,7 @@ END
         push @comments, \%comment;
     }
     return \@comments;
-} # ----------  end of subroutine drupal_get_comments_from_db_by_node  ----------
+} # ----------  end of subroutine _get_comments_from_db_by_node  ----------
 
 sub _get_tags_by_nid {
     my ( $dbh, $nid ) = @_;
@@ -166,8 +173,11 @@ sub _connect_to_db {
     my $dbh = DBI->connect( $dsn, $user, $password,
         { RaiseError => 1, AutoCommit => 0 } );
     return $dbh;
-}    # ----------  end of subroutine drupal_connect_to_db  ----------
+}    # ----------  end of subroutine _connect_to_db  ----------
 
+#---------------------------------------------------------------------------
+#  Provide the handle, statement, and the bind paramaters as an array
+#---------------------------------------------------------------------------
 sub _execute_statement {
     my ( $dbh, $statement, @bind_params ) = @_;
     my $sth = $dbh->prepare( $statement );
@@ -186,15 +196,18 @@ sub _execute_statement {
 
 =head1 NAME
 
-sample - Using Getopt::Long and Pod::Usage
+Drupal to MovableType migration helper. 
 
 =head1 SYNOPSIS
 
-sample [options] [file ...]
+./drupal_to_mt.pl [options] > [file]
 
 Options:
   -help            brief help message
   -man             full documentation
+  -user            database username
+  -pass            database password
+  -db              dbi:Driver:databasename
 
 =head1 OPTIONS
 
@@ -212,14 +225,17 @@ Prints the manual page and exits.
 
 =head1 DESCRIPTION
 
-B<This program> will read the given input file(s) and do something
+This script will output a MovableType-compatible import file
+from a Drupal (4.x) database. 
+
+You'll need to adjust the statements if you want something different.
 
 =cut
 
 __END__
 [% FOREACH node = nodes -%]
 TITLE: [% node.title %]
-AUTHOR: phillipadsmith
+AUTHOR:
 DATE: [% node.created %]
 PRIMARY CATEGORY: Archive
 CATEGORY: [% node.category %] 
