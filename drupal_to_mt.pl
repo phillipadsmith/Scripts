@@ -62,6 +62,30 @@ sub main {
 #---------------------------------------------------------------------------
 #  Helper subroutines
 #---------------------------------------------------------------------------
+sub _get_nodes_from_db {
+    my ( $dbh ) = @_;
+    my @nodes;
+    my $statement = <<'END';
+SELECT node.nid, 
+	node_revisions.title, 
+	node_revisions.body, 
+	node_revisions.teaser, 
+	node_revisions.format, 
+	node.created
+FROM node, node_revisions
+WHERE node.vid = node_revisions.vid
+AND
+node.type = 'story'
+END
+    my $sth = _execute_statement( $dbh, $statement );
+    while ( my @row = $sth->fetchrow_array ) {
+        my %node = _build_node_object( $dbh, @row );
+        push @nodes, \%node;
+    }
+
+    return @nodes;
+}    # ----------  end of subroutine _get_nodes_from_db  ----------
+
 sub _build_node_object {
     my ( $dbh, $nid, $title, $body, $teas, $format, $created ) = @_;
     my @tags           = _get_tags_by_nid( $dbh, $nid );
@@ -97,30 +121,6 @@ sub _build_comment_object {
     );
     return %data;
 }    # ----------  end of subroutine _build_comment_object  ----------
-
-sub _get_nodes_from_db {
-    my ( $dbh ) = @_;
-    my @nodes;
-    my $statement = <<'END';
-SELECT node.nid, 
-	node_revisions.title, 
-	node_revisions.body, 
-	node_revisions.teaser, 
-	node_revisions.format, 
-	node.created
-FROM node, node_revisions
-WHERE node.vid = node_revisions.vid
-AND
-node.type = 'story'
-END
-    my $sth = _execute_statement( $dbh, $statement );
-    while ( my @row = $sth->fetchrow_array ) {
-        my %node = _build_node_object( $dbh, @row );
-        push @nodes, \%node;
-    }
-
-    return @nodes;
-}    # ----------  end of subroutine _get_nodes_from_db  ----------
 
 sub _get_comments_by_nid {
     my ( $dbh, $nid ) = @_;
