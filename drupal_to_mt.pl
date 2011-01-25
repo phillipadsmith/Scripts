@@ -82,7 +82,6 @@ END
         my %node = _build_node_object( $dbh, @row );
         push @nodes, \%node;
     }
-
     return @nodes;
 }    # ----------  end of subroutine _get_nodes_from_db  ----------
 
@@ -94,8 +93,8 @@ sub _build_node_object {
     my %data           = (
         nid     => $nid,
         title   => $title,
-        body    => do { $format = 5 ? $body = markdown( $body ) : $body },
-        teaser  => do { $format = 5 ? $teas = markdown( $teas ) : $teas },
+        body    => do { $format == 5 ? $body = markdown( $body ) : $body },
+        teaser  => do { $format == 5 ? $teas = markdown( $teas ) : $teas },
         format  => $format,
         created => _return_mt_date( $created ),
         comments => _get_comments_by_nid( $dbh, $nid ),
@@ -112,7 +111,7 @@ sub _build_comment_object {
     my %data = (
         cid      => $cid,
         subject  => $subject,
-        comment  => $comment,
+        comment  => do { $format == 5 ? $comment = markdown( $comment ) : $comment },
         created  => _return_mt_date( $created ),
         format   => $format,
         name     => $name,
@@ -257,7 +256,7 @@ AUTHOR: [% comment.name %]
 EMAIL:  [% comment.mail %]
 URL: [% comment.homepage %]
 DATE: [% comment.created %] 
-<strong>[% comment.subject %]</strong>
+<strong>[% comment.subject %]</strong><br />
 [% comment.comment %]
 -----
 [% END %]
